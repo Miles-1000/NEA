@@ -1,5 +1,6 @@
 import sys
-from PySide6 import QtCore, QtWidgets, QtGui, QtGraphs;
+#from PySide6 import QtCore, QtWidgets, QtGui, QtGraphs
+from PySide6 import QtWidgets, QtCore
 
 class MainGUI(QtWidgets.QWidget):
     def __init__(self):
@@ -14,11 +15,17 @@ class MainGUI(QtWidgets.QWidget):
         self.layout.addWidget(self.button)
         self.layout.addWidget(self.text_edit)
 
+        self.button.clicked.connect(self.buttonPress)
+
+    @QtCore.Slot()
+    def buttonPress(self):
+        self.line_edit.setPlaceholderText("Button pressed!! YAY :DD")
+        self.text_edit.append(self.line_edit.text())
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication()
+    print(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     widget = MainGUI()
     widget.resize(800, 600)
     widget.show()
-    app.exec()
     sys.exit(app.exec())
