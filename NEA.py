@@ -23,7 +23,6 @@ class MainGUI(QtWidgets.QWidget):
         self.text_edit.append(self.line_edit.text())
 
 if __name__ == "__main__":
-    print(sys.argv)
     app = QtWidgets.QApplication(sys.argv)
     widget = MainGUI()
     widget.resize(800, 600)
