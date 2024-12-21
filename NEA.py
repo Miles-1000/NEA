@@ -7,20 +7,25 @@ class MainGUI(QtWidgets.QWidget):
         super().__init__()
         
         self.button = QtWidgets.QPushButton("Buttony wuttony")
-        self.line_edit = QtWidgets.QLineEdit()
-        self.line_edit.setPlaceholderText("Button not pressed yet :(")
+        self.input_box = QtWidgets.QLineEdit()
+        self.input_box.setPlaceholderText("Button not pressed yet :(")
         self.text_edit = QtWidgets.QTextEdit()
         self.layout = QtWidgets.QVBoxLayout(self)
-        self.layout.addWidget(self.line_edit)
+        self.layout.addWidget(self.input_box)
         self.layout.addWidget(self.button)
         self.layout.addWidget(self.text_edit)
 
-        self.button.clicked.connect(self.buttonPress)
+        self.button.clicked.connect(self.inputEntered)
+        self.button.clicked.connect(self.buttonPressed)
+        self.input_box.returnPressed.connect(self.inputEntered)
 
     @QtCore.Slot()
-    def buttonPress(self):
-        self.line_edit.setPlaceholderText("Button pressed!! YAY :DD")
-        self.text_edit.append(self.line_edit.text())
+    def inputEntered(self):
+        self.text_edit.append(self.input_box.text())
+        self.input_box.setText("")
+
+    def buttonPressed(self):
+        self.input_box.setPlaceholderText("Button pressed!! YAY :DD")
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
