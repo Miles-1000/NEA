@@ -3,6 +3,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtCharts import *
 from PySide6.QtGui import *
+from datetime import datetime
 
 class Display(QMainWindow):
     def __init__(self):
@@ -49,15 +50,19 @@ class Display(QMainWindow):
 
         self.chart.addSeries(self.candlestickChart)
 
+        #Configuring axis ranges
+        self.startDate = int(datetime.strptime("2024-01-01", "%Y-%m-%d").timestamp())
+        self.endDate = int(datetime.strptime("2024-01-10", "%Y-%m-%d").timestamp())
+
         #Configuring axes
-        self.xAxis = QValueAxis()
-        self.yAxis = QValueAxis()
-
+        self.xAxis = QDateTimeAxis()
         self.xAxis.setTitleText("Day")
-        self.yAxis.setTitleText("Price")
+        self.xAxis.setFormat("dd-MM-yyyy")
+        self.xAxis.setRange(QDateTime.fromSecsSinceEpoch(self.startDate), QDateTime.fromSecsSinceEpoch(self.endDate))
+        self.xAxis.setTickCount((self.endDate - self.startDate) // 86400 + 1)
 
-        self.xAxis.setRange(0,9)
-        self.xAxis.setTickCount(15)
+        self.yAxis = QValueAxis()
+        self.yAxis.setTitleText("Price")
         self.yAxis.setRange(135,150)
 
         self.chart.addAxis(self.xAxis, Qt.AlignBottom)
