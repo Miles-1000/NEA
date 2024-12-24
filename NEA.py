@@ -1,34 +1,84 @@
 import sys
-#from PySide6 import QtCore, QtWidgets, QtGui, QtGraphs
-from PySide6 import QtWidgets, QtCore
+from PySide6.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtCharts import *
+from PySide6.QtGui import *
 
-class Display(QtWidgets.QWidget):
-    def __init__(self, algos):
+class Display(QMainWindow):
+    def __init__(self):
         super().__init__()
+        self.setupMainGUI()
+        self.setupCandlestickChart()
 
-        self.algos = algos
         
+    def setupMainGUI(self):
         self.setWindowTitle("Stock Market Trading Algorithm")
-        self.algoSelection = QtWidgets.QComboBox()
-        self.algoSelection.addItems(algos)
-        self.choiceDisplay = QtWidgets.QLabel()
-        self.choiceDisplay.setText("No algorithm selected yet")
-        self.layout = QtWidgets.QVBoxLayout()
 
-        self.layout.addWidget(self.algoSelection)
-        self.layout.addWidget(self.choiceDisplay)
-        self.setLayout(self.layout)
+        #Setting central widget for QMainWindow 
+        centralWidget = QWidget()
+        self.setCentralWidget(centralWidget)
+        self.mainLayout = QVBoxLayout()
+
+        #Defining dropdown box
+        self.algoSelection = QComboBox()
+        self.algoSelection.addItems(["No algorithm", "RSI", "Moving average"])
 
         self.algoSelection.currentIndexChanged.connect(self.changeAlgo)
+        
+        #Defining text for algorithm selection
+        algoSelectText = QLabel("Select algorithm: ")
 
-    @QtCore.Slot()
+        #Set layout for top controls
+        controlsLayout = QHBoxLayout()
+        controlsLayout.addWidget(algoSelectText)
+        controlsLayout.addWidget(self.algoSelection)
+
+        #Adding control layout to main
+        self.mainLayout.addLayout(controlsLayout)
+        centralWidget.setLayout(self.mainLayout)
+    
+    def setupCandlestickChart(self):
+        #Initialise chart
+        self.chart = QChart()
+        self.chart.setTitle("Example Chart")
+
+        self.candlestickChart = QCandlestickSeries()
+        self.candlestickChart.setName("Stock Candlesticks")
+        self.candlestickChart.setIncreasingColor(Qt.green)
+        self.candlestickChart.setDecreasingColor(Qt.red)
+
+        self.chart.addSeries(self.candlestickChart)
+
+        #Configuring axes
+        self.xAxis = QValueAxis()
+        self.yAxis = QValueAxis()
+
+        self.xAxis.setTitleText("Day")
+        self.yAxis.setTitleText("Price")
+
+        self.xAxis.setRange(0,9)
+        self.xAxis.setTickCount(15)
+        self.yAxis.setRange(135,150)
+
+        self.chart.addAxis(self.xAxis, Qt.AlignBottom)
+        self.chart.addAxis(self.yAxis, Qt.AlignLeft)
+
+        self.candlestickChart.attachAxis(self.xAxis)
+        self.candlestickChart.attachAxis(self.yAxis)
+
+        self.chartView = QChartView(self.chart)
+        self.chartView.setRenderHint(QPainter.Antialiasing)
+
+        self.mainLayout.addWidget(self.chartView)
+
+    @Slot(int)
     def changeAlgo(self, index):
-        self.choiceDisplay.setText("Current Algorithm: " + self.algos[index])
+        pass
 
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    widget = Display(["RSI", "Moving average", "Custom"])
+    app = QApplication(sys.argv)
+    widget = Display()
     widget.resize(800, 600)
     widget.show()
     sys.exit(app.exec())
