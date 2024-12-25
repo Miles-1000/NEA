@@ -54,26 +54,30 @@ class Display(QMainWindow):
         self.startDate = int(datetime.strptime("2024-01-01", "%Y-%m-%d").timestamp())
         self.endDate = int(datetime.strptime("2024-01-10", "%Y-%m-%d").timestamp())
 
-        #Configuring axes
+        #Configuring x axis
         self.xAxis = QDateTimeAxis()
         self.xAxis.setTitleText("Day")
         self.xAxis.setFormat("dd-MM-yyyy")
         self.xAxis.setRange(QDateTime.fromSecsSinceEpoch(self.startDate), QDateTime.fromSecsSinceEpoch(self.endDate))
         self.xAxis.setTickCount((self.endDate - self.startDate) // 86400 + 1)
 
+        #Configuring y axis
         self.yAxis = QValueAxis()
         self.yAxis.setTitleText("Price")
         self.yAxis.setRange(135,150)
 
+        #Adding axes to chart
         self.chart.addAxis(self.xAxis, Qt.AlignBottom)
         self.chart.addAxis(self.yAxis, Qt.AlignLeft)
 
         self.candlestickChart.attachAxis(self.xAxis)
         self.candlestickChart.attachAxis(self.yAxis)
 
+        #View chart
         self.chartView = QChartView(self.chart)
         self.chartView.setRenderHint(QPainter.Antialiasing)
 
+        #Configure layout
         self.mainLayout.addWidget(self.chartView)
 
     @Slot(int)
