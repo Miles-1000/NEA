@@ -58,7 +58,7 @@ class Display(QMainWindow):
         self.xAxis = QDateTimeAxis()
         self.xAxis.setTitleText("Day")
         self.xAxis.setFormat("dd-MM-yyyy")
-        self.xAxis.setRange(QDateTime.fromSecsSinceEpoch(self.startDate), QDateTime.fromSecsSinceEpoch(self.endDate))
+        self.xAxis.setRange(QDateTime.fromSecsSinceEpoch(self.startDate - 86400), QDateTime.fromSecsSinceEpoch(self.endDate))
         self.xAxis.setTickCount((self.endDate - self.startDate) // 86400 + 1)
 
         #Configuring y axis
@@ -72,6 +72,18 @@ class Display(QMainWindow):
 
         self.candlestickChart.attachAxis(self.xAxis)
         self.candlestickChart.attachAxis(self.yAxis)
+
+        #Example data
+        data = [
+        (datetime(2024, 1, 1).timestamp(), 140, 145, 135, 142),
+        (datetime(2024, 1, 2).timestamp(), 141, 144, 138, 140),
+        (datetime(2024, 1, 3).timestamp(), 139, 143, 136, 141),
+        (datetime(2024, 1, 4).timestamp(), 141, 150, 136, 145),
+        ]
+
+        for timestamp, open_, high, low, close in data:
+            candlestick = QCandlestickSet(open_, high, low, close, QDateTime.fromSecsSinceEpoch(int(timestamp)).toMSecsSinceEpoch())
+            self.candlestickChart.append(candlestick)
 
         #View chart
         self.chartView = QChartView(self.chart)
