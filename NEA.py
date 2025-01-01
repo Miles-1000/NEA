@@ -4,6 +4,8 @@ from PySide6.QtCore import *
 from PySide6.QtCharts import *
 from PySide6.QtGui import *
 from datetime import datetime
+from trading_ig import IGService
+from trading_ig.config import config
 
 class Display(QMainWindow):
     def __init__(self):
@@ -50,7 +52,7 @@ class Display(QMainWindow):
 
         self.chart.addSeries(self.candlestickChart)
 
-        #Configuring axis ranges
+        #Configuring date ranges
         self.startDate = int(datetime.strptime("2024-01-01", "%Y-%m-%d").timestamp())
         self.endDate = int(datetime.strptime("2024-01-10", "%Y-%m-%d").timestamp())
 
@@ -73,17 +75,11 @@ class Display(QMainWindow):
         self.candlestickChart.attachAxis(self.xAxis)
         self.candlestickChart.attachAxis(self.yAxis)
 
-        #Example data
-        data = [
-        (datetime(2024, 1, 1).timestamp(), 140, 145, 135, 142),
-        (datetime(2024, 1, 2).timestamp(), 141, 144, 138, 140),
-        (datetime(2024, 1, 3).timestamp(), 139, 143, 136, 141),
-        (datetime(2024, 1, 4).timestamp(), 141, 150, 136, 145),
-        ]
-
-        for timestamp, open_, high, low, close in data:
-            candlestick = QCandlestickSet(open_, high, low, close, QDateTime.fromSecsSinceEpoch(int(timestamp)).toMSecsSinceEpoch())
-            self.candlestickChart.append(candlestick)
+        self.loadIGData("IX.D.SPTRD.DAILY.IP",
+                        "D",
+                        self.startDate,
+                        self.endDate
+                        )
 
         #View chart
         self.chartView = QChartView(self.chart)
@@ -91,6 +87,25 @@ class Display(QMainWindow):
 
         #Configure layout
         self.mainLayout.addWidget(self.chartView)
+
+    def loadIGData(self, epic, resolution, startDate, endDate):
+        ig_service = IGService(config.username, config.password, config.api_key, config.acc_type)
+
+        ig_service.create_session()
+        #account_info = ig_service.switch_account(config.acc_number, False)
+
+        #print(account_info)
+
+        response = ig_service.fetch_historical_prices_by_epic_and_date_range(epic, resolution, '2014-12-15 00:00:00', '2014-12-20 00:00:00')
+        df_ask = response['prices']['ask']
+        print(f"ask prices:\n{df_ask}")       
+
+        # startDate = datetime.fromtimestamp(startDate).strftime("%Y-%m-%d")
+        # endDate = datetime.fromtimestamp(endDate).strftime("%Y-%m-%d")
+
+        # print(f"Requesting data for {epic} with resolution {resolution}, startDate {startDate} (type {type(startDate)}), endDate {endDate}")
+
+        # prices = ig_service.fetch_historical_prices_by_epic_and_date_range(epic, resolution, '2014-12-15', '2014-12-20')
 
     @Slot(int)
     def changeAlgo(self, index):
