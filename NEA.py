@@ -53,8 +53,8 @@ class Display(QMainWindow):
         self.chart.addSeries(self.candlestickChart)
 
         #Configuring date ranges
-        self.startDate = int(datetime.strptime("2024-01-01", "%Y-%m-%d").timestamp())
-        self.endDate = int(datetime.strptime("2024-01-10", "%Y-%m-%d").timestamp())
+        self.startDate = int(datetime.strptime("2024-01-10 14:30:00", "%Y-%m-%d %H:%M:%S").timestamp())
+        self.endDate = int(datetime.strptime("2024-01-10 19:00:00", "%Y-%m-%d %H:%M:%S").timestamp())
 
         #Configuring x axis
         self.xAxis = QDateTimeAxis()
@@ -76,7 +76,7 @@ class Display(QMainWindow):
         self.candlestickChart.attachAxis(self.yAxis)
 
         self.loadIGData("IX.D.SPTRD.DAILY.IP",
-                        "D",
+                        "30Min",
                         self.startDate,
                         self.endDate
                         )
@@ -92,20 +92,14 @@ class Display(QMainWindow):
         ig_service = IGService(config.username, config.password, config.api_key, config.acc_type)
 
         ig_service.create_session()
-        #account_info = ig_service.switch_account(config.acc_number, False)
 
-        #print(account_info)
-
-        response = ig_service.fetch_historical_prices_by_epic_and_date_range(epic, resolution, '2014-12-15 00:00:00', '2014-12-20 00:00:00')
+        response = ig_service.fetch_historical_prices_by_epic_and_date_range(epic, resolution, datetime.fromtimestamp(startDate).strftime("%Y-%m-%d %H:%M:%S"), datetime.fromtimestamp(endDate).strftime("%Y-%m-%d %H:%M:%S"))
+        
+        print(response)
+        
         df_ask = response['prices']['ask']
         print(f"ask prices:\n{df_ask}")       
 
-        # startDate = datetime.fromtimestamp(startDate).strftime("%Y-%m-%d")
-        # endDate = datetime.fromtimestamp(endDate).strftime("%Y-%m-%d")
-
-        # print(f"Requesting data for {epic} with resolution {resolution}, startDate {startDate} (type {type(startDate)}), endDate {endDate}")
-
-        # prices = ig_service.fetch_historical_prices_by_epic_and_date_range(epic, resolution, '2014-12-15', '2014-12-20')
 
     @Slot(int)
     def changeAlgo(self, index):
