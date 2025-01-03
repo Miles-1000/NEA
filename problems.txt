@@ -39,3 +39,6 @@ class config(object):
 
 Error: Dates not working
 Fix: Dates needed with time included
+
+Problem: Hard to manage Pandas dataframe 
+Fix: Had to examine the docs and use trial and error
