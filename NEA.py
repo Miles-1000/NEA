@@ -3,7 +3,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtCharts import *
 from PySide6.QtGui import *
-from datetime import datetime
+from datetime import datetime, timedelta
 from trading_ig import IGService
 from trading_ig.config import config
 
@@ -61,31 +61,47 @@ class Display(QMainWindow):
         # Retrieve data using IG API        
         priceData = self.loadIGData("IX.D.SPTRD.DAILY.IP", "30Min", self.startDate, self.endDate)
 
-        df_ask = priceData['prices']['ask']
+        dfAsk = priceData['prices']['ask']
+
+        minPrice = float('inf')
+        maxPrice = float('-inf')
 
         # Iterate through database rows
-        for time, price in df_ask.iterrows():
+        for time, price in dfAsk.iterrows():
+            # Create new candlestick
             candleStick = QCandlestickSet(
                 open = price["Open"],
-                high = price["High"],
-                low = price["Low"],
+                high = (highPrice := price["High"]),
+                low = (lowPrice := price["Low"]),
                 close = price["Close"],
                 timestamp = QDateTime.fromSecsSinceEpoch(int(datetime.strptime(str(time), "%Y-%m-%d %H:%M:%S").timestamp())).toMSecsSinceEpoch()
                 )
-            
-            self.candlestickChart.append(candleStick)
 
+            self.candlestickChart.append(candleStick)
+            
+            # Keep track of min & max prices
+            minPrice = min(minPrice, lowPrice)
+            maxPrice = max(maxPrice, highPrice)
 
         # Configuring x axis
         self.xAxis = QDateTimeAxis()
         self.xAxis.setTitleText("Time")
         self.xAxis.setFormat("HH:mm")
-        self.xAxis.setRange(QDateTime.fromSecsSinceEpoch(self.startDateTimestamp), QDateTime.fromSecsSinceEpoch(self.endDateTimestamp))
+
+        # Dynamic x range and tick count
+        xBuffer = int(timedelta(minutes = 15).total_seconds())
+        self.xAxis.setRange(QDateTime.fromSecsSinceEpoch(newStartTime := (self.startDateTimestamp - xBuffer)), QDateTime.fromSecsSinceEpoch(newEndTime := (self.endDateTimestamp + xBuffer)))
+        self.xAxis.setTickCount((newEndTime - newStartTime) // (xBuffer * 2) + 1)
 
         # Configuring y axis
         self.yAxis = QValueAxis()
         self.yAxis.setTitleText("Price")
-        self.yAxis.setRange(4745,4785)
+        
+        # Dynamic y range and tick count
+        yBuffer = int((maxPrice - minPrice) * 0.1)
+        self.yAxis.setRange(newMinPrice := (minPrice - yBuffer), newMaxPrice := (maxPrice + yBuffer))
+        self.yAxis.applyNiceNumbers()
+        self.yAxis.setMinorTickCount(1)
 
         # Adding axes to chart
         self.chart.addAxis(self.xAxis, Qt.AlignBottom)
