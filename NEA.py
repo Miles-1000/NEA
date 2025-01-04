@@ -35,7 +35,7 @@ class Display(QMainWindow):
         self.dateLabel = QLabel()
 
         # Center widgets
-        self.dateLabel.setAlignment(Qt.AlignCenter)
+        self.dateLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Set layout for top controls
         controlsLayout = QHBoxLayout()
@@ -110,8 +110,12 @@ class Display(QMainWindow):
         ig_service.create_session()
 
         # Retrieve data
-        return ig_service.fetch_historical_prices_by_epic_and_date_range(epic, resolution, startDate.strftime("%Y-%m-%d %H:%M:%S"), endDate.strftime("%Y-%m-%d %H:%M:%S"))
-    
+        try:
+            return ig_service.fetch_historical_prices_by_epic_and_date_range(epic, resolution, startDate.strftime("%Y-%m-%d %H:%M:%S"), endDate.strftime("%Y-%m-%d %H:%M:%S"))
+        except Exception as error:
+            print(error)
+            return False
+
     def populateChart(self, priceData):
         self.candlestickChart.clear()
         
@@ -161,9 +165,11 @@ class Display(QMainWindow):
 
         priceData = self.loadIGData("IX.D.SPTRD.DAILY.IP", "30Min", self.startDate, self.endDate)
 
-        minPrice, maxPrice = self.populateChart(priceData)
-
-        self.dynamicAxes(minPrice, maxPrice)
+        if priceData:
+            minPrice, maxPrice = self.populateChart(priceData)
+            self.dynamicAxes(minPrice, maxPrice)
+        else:
+            self.candlestickChart.clear()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
