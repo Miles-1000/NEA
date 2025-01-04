@@ -31,10 +31,20 @@ class Display(QMainWindow):
         self.prevDateButton.clicked.connect(lambda: self.changeDate(-1))
         self.nextDateButton.clicked.connect(lambda: self.changeDate(1))
 
+        # Label to show date
+        self.dateLabel = QLabel()
+
+        # Center widgets
+        self.dateLabel.setAlignment(Qt.AlignCenter)
+
         # Set layout for top controls
         controlsLayout = QHBoxLayout()
+
+        controlsLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         controlsLayout.addWidget(self.prevDateButton)
+        controlsLayout.addWidget(self.dateLabel)
         controlsLayout.addWidget(self.nextDateButton)
+        controlsLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
         # Adding control layout to main
         self.mainLayout.addLayout(controlsLayout)
@@ -58,6 +68,8 @@ class Display(QMainWindow):
 
         self.startDateTimestamp = int(self.startDate.timestamp())
         self.endDateTimestamp = int(self.endDate.timestamp())
+
+        self.dateLabel.setText(datetime.strftime(self.startDate.date(), "%d/%m/%Y"))
 
         # Retrieve data using IG API        
         priceData = self.loadIGData("IX.D.SPTRD.DAILY.IP", "30Min", self.startDate, self.endDate)
@@ -144,6 +156,8 @@ class Display(QMainWindow):
         self.endDate += timedelta(days=1) * sign
         self.startDateTimestamp = int(self.startDate.timestamp())
         self.endDateTimestamp = int(self.endDate.timestamp())
+
+        self.dateLabel.setText(datetime.strftime(self.startDate.date(), "%d/%m/%Y"))
 
         priceData = self.loadIGData("IX.D.SPTRD.DAILY.IP", "30Min", self.startDate, self.endDate)
 
