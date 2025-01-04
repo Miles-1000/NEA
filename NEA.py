@@ -77,7 +77,6 @@ class Display(QMainWindow):
 
         self.dynamicAxes(int(minPrice), int(maxPrice))
         
-
         # Adding axes to chart
         self.chart.addAxis(self.xAxis, Qt.AlignBottom)
         self.chart.addAxis(self.yAxis, Qt.AlignLeft)
@@ -130,13 +129,12 @@ class Display(QMainWindow):
 
     def dynamicAxes(self, minPrice, maxPrice):
         # Dynamic x range
-        xPadding = int(timedelta(minutes = 15).total_seconds())
+        xPadding = int(timedelta(minutes = 30).total_seconds())
         self.xAxis.setRange(QDateTime.fromSecsSinceEpoch(newStartTime := (self.startDateTimestamp - xPadding)), QDateTime.fromSecsSinceEpoch(newEndTime := (self.endDateTimestamp + xPadding)))
-        self.xAxis.setTickCount((newEndTime - newStartTime) // (xPadding * 2) + 1)
+        self.xAxis.setTickCount((newEndTime - newStartTime) // (xPadding) + 1)
         
         # Dynamic y range
         yPadding = int((maxPrice - minPrice) * 0.1)
-        print(minPrice - yPadding, maxPrice + yPadding)
         self.yAxis.setRange(minPrice - yPadding, maxPrice + yPadding)
         self.yAxis.applyNiceNumbers()
 
@@ -152,9 +150,6 @@ class Display(QMainWindow):
         minPrice, maxPrice = self.populateChart(priceData)
 
         self.dynamicAxes(minPrice, maxPrice)
-
-
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

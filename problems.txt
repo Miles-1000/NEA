@@ -46,3 +46,6 @@ Fix: Had to examine the docs and use trial and error
 Problem: Ignored NaN, Inf, or -Inf value.
 Attempting to set invalid range for value axis: [ nan  -  nan ]
 Fix: Max price and min price wrong way round, switched
+
+Client feedback: Times only shown at XX:15 and XX:45, should be shown at half hour intervals
+Response: Added more padding to ensure correct times shown
