@@ -42,3 +42,7 @@ Fix: Dates needed with time included
 
 Problem: Hard to manage Pandas dataframe 
 Fix: Had to examine the docs and use trial and error
+
+Problem: Ignored NaN, Inf, or -Inf value.
+Attempting to set invalid range for value axis: [ nan  -  nan ]
+Fix: Max price and min price wrong way round, switched

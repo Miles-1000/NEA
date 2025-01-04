@@ -12,7 +12,6 @@ class Display(QMainWindow):
         super().__init__()
         self.setupMainGUI()
         self.setupCandlestickChart()
-
         
     def setupMainGUI(self):
         self.setWindowTitle("Stock Market Trading Algorithm")
@@ -22,19 +21,20 @@ class Display(QMainWindow):
         self.setCentralWidget(centralWidget)
         self.mainLayout = QVBoxLayout()
 
-        # Defining dropdown box
-        self.algoSelection = QComboBox()
-        self.algoSelection.addItems(["No algorithm", "RSI", "Moving average"])
+        # Defining date buttons
+        self.prevDateButton = QToolButton()
+        self.prevDateButton.setArrowType(Qt.LeftArrow)
 
-        self.algoSelection.currentIndexChanged.connect(self.changeAlgo)
+        self.nextDateButton = QToolButton()
+        self.nextDateButton.setArrowType(Qt.RightArrow)
         
-        # Defining text for algorithm selection
-        algoSelectText = QLabel("Select algorithm: ")
+        self.prevDateButton.clicked.connect(lambda: self.changeDate(-1))
+        self.nextDateButton.clicked.connect(lambda: self.changeDate(1))
 
         # Set layout for top controls
         controlsLayout = QHBoxLayout()
-        controlsLayout.addWidget(algoSelectText)
-        controlsLayout.addWidget(self.algoSelection)
+        controlsLayout.addWidget(self.prevDateButton)
+        controlsLayout.addWidget(self.nextDateButton)
 
         # Adding control layout to main
         self.mainLayout.addLayout(controlsLayout)
@@ -54,54 +54,29 @@ class Display(QMainWindow):
 
         # Configuring date ranges
         self.startDate = datetime.strptime("2024-01-10 14:30:00", "%Y-%m-%d %H:%M:%S")
-        self.startDateTimestamp = int(self.startDate.timestamp())
         self.endDate = datetime.strptime("2024-01-10 19:00:00", "%Y-%m-%d %H:%M:%S")
+
+        self.startDateTimestamp = int(self.startDate.timestamp())
         self.endDateTimestamp = int(self.endDate.timestamp())
 
         # Retrieve data using IG API        
         priceData = self.loadIGData("IX.D.SPTRD.DAILY.IP", "30Min", self.startDate, self.endDate)
 
-        dfAsk = priceData['prices']['ask']
-
-        minPrice = float('inf')
-        maxPrice = float('-inf')
-
-        # Iterate through database rows
-        for time, price in dfAsk.iterrows():
-            # Create new candlestick
-            candleStick = QCandlestickSet(
-                open = price["Open"],
-                high = (highPrice := price["High"]),
-                low = (lowPrice := price["Low"]),
-                close = price["Close"],
-                timestamp = QDateTime.fromSecsSinceEpoch(int(datetime.strptime(str(time), "%Y-%m-%d %H:%M:%S").timestamp())).toMSecsSinceEpoch()
-                )
-
-            self.candlestickChart.append(candleStick)
-            
-            # Keep track of min & max prices
-            minPrice = min(minPrice, lowPrice)
-            maxPrice = max(maxPrice, highPrice)
+        minPrice, maxPrice = self.populateChart(priceData)
 
         # Configuring x axis
         self.xAxis = QDateTimeAxis()
         self.xAxis.setTitleText("Time")
         self.xAxis.setFormat("HH:mm")
 
-        # Dynamic x range and tick count
-        xBuffer = int(timedelta(minutes = 15).total_seconds())
-        self.xAxis.setRange(QDateTime.fromSecsSinceEpoch(newStartTime := (self.startDateTimestamp - xBuffer)), QDateTime.fromSecsSinceEpoch(newEndTime := (self.endDateTimestamp + xBuffer)))
-        self.xAxis.setTickCount((newEndTime - newStartTime) // (xBuffer * 2) + 1)
-
         # Configuring y axis
         self.yAxis = QValueAxis()
-        self.yAxis.setTitleText("Price")
-        
-        # Dynamic y range and tick count
-        yBuffer = int((maxPrice - minPrice) * 0.1)
-        self.yAxis.setRange(newMinPrice := (minPrice - yBuffer), newMaxPrice := (maxPrice + yBuffer))
+        self.yAxis.setTitleText("Price")                
         self.yAxis.applyNiceNumbers()
-        self.yAxis.setMinorTickCount(1)
+        self.yAxis.setMinorTickCount(9)
+
+        self.dynamicAxes(int(minPrice), int(maxPrice))
+        
 
         # Adding axes to chart
         self.chart.addAxis(self.xAxis, Qt.AlignBottom)
@@ -125,11 +100,60 @@ class Display(QMainWindow):
 
         # Retrieve data
         return ig_service.fetch_historical_prices_by_epic_and_date_range(epic, resolution, startDate.strftime("%Y-%m-%d %H:%M:%S"), endDate.strftime("%Y-%m-%d %H:%M:%S"))
+    
+    def populateChart(self, priceData):
+        self.candlestickChart.clear()
+        
+        dfAsk = priceData['prices']['ask']
+
+        minPrice = float('inf')
+        maxPrice = float('-inf')
+
+        # Iterate through database rows
+        for time, price in dfAsk.iterrows():
+            # Create new candlestick
+            candleStick = QCandlestickSet(
+                open = price["Open"],
+                high = (highPrice := price["High"]),
+                low = (lowPrice := price["Low"]),
+                close = price["Close"],
+                timestamp = QDateTime.fromSecsSinceEpoch(int(datetime.strptime(str(time), "%Y-%m-%d %H:%M:%S").timestamp())).toMSecsSinceEpoch()
+                )
+
+            self.candlestickChart.append(candleStick)
+            
+            # Keep track of min & max prices
+            minPrice = min(minPrice, lowPrice)
+            maxPrice = max(maxPrice, highPrice)
+
+        return minPrice, maxPrice
+
+    def dynamicAxes(self, minPrice, maxPrice):
+        # Dynamic x range
+        xPadding = int(timedelta(minutes = 15).total_seconds())
+        self.xAxis.setRange(QDateTime.fromSecsSinceEpoch(newStartTime := (self.startDateTimestamp - xPadding)), QDateTime.fromSecsSinceEpoch(newEndTime := (self.endDateTimestamp + xPadding)))
+        self.xAxis.setTickCount((newEndTime - newStartTime) // (xPadding * 2) + 1)
+        
+        # Dynamic y range
+        yPadding = int((maxPrice - minPrice) * 0.1)
+        print(minPrice - yPadding, maxPrice + yPadding)
+        self.yAxis.setRange(minPrice - yPadding, maxPrice + yPadding)
+        self.yAxis.applyNiceNumbers()
+
+    @Slot()
+    def changeDate(self, sign):
+        self.startDate += timedelta(days=1) * sign
+        self.endDate += timedelta(days=1) * sign
+        self.startDateTimestamp = int(self.startDate.timestamp())
+        self.endDateTimestamp = int(self.endDate.timestamp())
+
+        priceData = self.loadIGData("IX.D.SPTRD.DAILY.IP", "30Min", self.startDate, self.endDate)
+
+        minPrice, maxPrice = self.populateChart(priceData)
+
+        self.dynamicAxes(minPrice, maxPrice)
 
 
-    @Slot(int)
-    def changeAlgo(self, index):
-        pass
 
 
 if __name__ == "__main__":
