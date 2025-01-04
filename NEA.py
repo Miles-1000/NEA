@@ -63,8 +63,8 @@ class Display(QMainWindow):
         self.chart.addSeries(self.candlestickChart)
 
         # Configuring date ranges
-        self.startDate = datetime.strptime("2024-01-10 14:30:00", "%Y-%m-%d %H:%M:%S")
-        self.endDate = datetime.strptime("2024-01-10 19:00:00", "%Y-%m-%d %H:%M:%S")
+        self.startDate = datetime.strptime("2024-01-13 14:30:00", "%Y-%m-%d %H:%M:%S")
+        self.endDate = datetime.strptime("2024-01-13 19:00:00", "%Y-%m-%d %H:%M:%S")
 
         self.startDateTimestamp = int(self.startDate.timestamp())
         self.endDateTimestamp = int(self.endDate.timestamp())
@@ -74,7 +74,10 @@ class Display(QMainWindow):
         # Retrieve data using IG API        
         priceData = self.loadIGData("IX.D.SPTRD.DAILY.IP", "30Min", self.startDate, self.endDate)
 
-        minPrice, maxPrice = self.populateChart(priceData)
+        if priceData:
+            minPrice, maxPrice = self.populateChart(priceData)
+        else:
+            minPrice, maxPrice = 0, 1
 
         # Configuring x axis
         self.xAxis = QDateTimeAxis()
