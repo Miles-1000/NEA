@@ -63,8 +63,8 @@ class Display(QMainWindow):
         self.chart.addSeries(self.candlestickChart)
 
         # Configuring date ranges
-        self.startDate = datetime.strptime("2024-01-13 14:30:00", "%Y-%m-%d %H:%M:%S")
-        self.endDate = datetime.strptime("2024-01-13 19:00:00", "%Y-%m-%d %H:%M:%S")
+        self.startDate = datetime.strptime("2025-01-03 14:30:00", "%Y-%m-%d %H:%M:%S")
+        self.endDate = datetime.strptime("2025-01-03 19:00:00", "%Y-%m-%d %H:%M:%S")
 
         self.startDateTimestamp = int(self.startDate.timestamp())
         self.endDateTimestamp = int(self.endDate.timestamp())
