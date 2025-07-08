@@ -3,13 +3,14 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtCharts import *
 from PySide6.QtGui import *
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from trading_ig import IGService
 from trading_ig.config import config
 
 class Display(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.IGCache = {}
         self.setupMainGUI()
         self.setupCandlestickChart()
         
@@ -63,8 +64,9 @@ class Display(QMainWindow):
         self.chart.addSeries(self.candlestickChart)
 
         # Configuring date ranges
-        self.startDate = datetime.strptime("2025-01-03 14:30:00", "%Y-%m-%d %H:%M:%S")
-        self.endDate = datetime.strptime("2025-01-03 19:00:00", "%Y-%m-%d %H:%M:%S")
+        self.fetchDate = date.today()
+        self.startDate = datetime.strptime(f"{self.fetchDate.strftime("%Y/%m/%d")} 14:30:00", "%Y/%m/%d %H:%M:%S")
+        self.endDate = datetime.strptime(f"{self.fetchDate.strftime("%Y/%m/%d")} 19:00:00", "%Y/%m/%d %H:%M:%S")
 
         self.startDateTimestamp = int(self.startDate.timestamp())
         self.endDateTimestamp = int(self.endDate.timestamp())
@@ -112,12 +114,22 @@ class Display(QMainWindow):
 
         ig_service.create_session()
 
-        # Retrieve data
         try:
-            return ig_service.fetch_historical_prices_by_epic_and_date_range(epic, resolution, startDate.strftime("%Y-%m-%d %H:%M:%S"), endDate.strftime("%Y-%m-%d %H:%M:%S"))
-        except Exception as error:
-            print(error)
-            return False
+            response = self.IGCache[(epic, resolution, startDate, endDate)]
+            print("Could find from cache")
+        except:
+            try:
+                response = ig_service.fetch_historical_prices_by_epic_and_date_range(epic, resolution, startDate.strftime("%Y-%m-%d %H:%M:%S"), endDate.strftime("%Y-%m-%d %H:%M:%S"))
+            except Exception as error:
+                print(error)
+                return False
+            else:
+                self.IGCache.update({(epic, resolution, startDate, endDate): response})
+                print("Response", response)
+                return response
+        else:
+            return response
+
 
     def populateChart(self, priceData):
         self.candlestickChart.clear()
